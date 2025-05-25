@@ -1,0 +1,124 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "d83e49b1",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting git+https://github.com/line/line-bot-sdk-python@master\n",
+      "  Cloning https://github.com/line/line-bot-sdk-python (to revision master) to c:\\users\\hiron\\appdata\\local\\temp\\pip-req-build-c6i6_erd\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "  ERROR: Error [WinError 2] 指定されたファイルが見つかりません。 while executing command git version\n",
+      "ERROR: Cannot find command 'git' - do you have 'git' installed and in your PATH?\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: flask in c:\\users\\hiron\\anaconda3\\lib\\site-packages (2.2.5)\n",
+      "Requirement already satisfied: Werkzeug>=2.2.2 in c:\\users\\hiron\\anaconda3\\lib\\site-packages (from flask) (2.2.3)\n",
+      "Requirement already satisfied: Jinja2>=3.0 in c:\\users\\hiron\\anaconda3\\lib\\site-packages (from flask) (3.1.3)\n",
+      "Requirement already satisfied: itsdangerous>=2.0 in c:\\users\\hiron\\anaconda3\\lib\\site-packages (from flask) (2.0.1)\n",
+      "Requirement already satisfied: click>=8.0 in c:\\users\\hiron\\anaconda3\\lib\\site-packages (from flask) (8.1.7)\n",
+      "Requirement already satisfied: colorama in c:\\users\\hiron\\anaconda3\\lib\\site-packages (from click>=8.0->flask) (0.4.6)\n",
+      "Requirement already satisfied: MarkupSafe>=2.0 in c:\\users\\hiron\\anaconda3\\lib\\site-packages (from Jinja2>=3.0->flask) (2.1.3)\n",
+      " * Serving Flask app '__main__'\n",
+      " * Debug mode: off\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "C:\\Users\\hiron\\AppData\\Local\\Temp\\ipykernel_12328\\4153573422.py:13: LineBotSdkDeprecatedIn30: Call to deprecated class LineBotApi. (Use v3 class; linebot.v3.<feature>. See https://github.com/line/line-bot-sdk-python/blob/master/README.rst for more details.) -- Deprecated since version 3.0.0.\n",
+      "  line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)\n",
+      "C:\\Users\\hiron\\AppData\\Local\\Temp\\ipykernel_12328\\4153573422.py:14: LineBotSdkDeprecatedIn30: Call to deprecated class WebhookHandler. (Use 'from linebot.v3.webhook import WebhookHandler' instead. See https://github.com/line/line-bot-sdk-python/blob/master/README.rst for more details.) -- Deprecated since version 3.0.0.\n",
+      "  handler = WebhookHandler(CHANNEL_SECRET)\n",
+      "WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.\n",
+      " * Running on http://127.0.0.1:5000\n",
+      "Press CTRL+C to quit\n"
+     ]
+    }
+   ],
+   "source": [
+    "!pip install git+https://github.com/line/line-bot-sdk-python@master\n",
+    "!pip install flask\n",
+    "from flask import Flask, request, abort\n",
+    "from linebot import LineBotApi, WebhookHandler\n",
+    "from linebot.exceptions import InvalidSignatureError\n",
+    "from linebot.models import MessageEvent, TextMessage, TextSendMessage\n",
+    "import os\n",
+    "\n",
+    "# アクセストークンとシークレット（直書き or 環境変数）\n",
+    "CHANNEL_ACCESS_TOKEN = (\"f+Q1kdvvcQ4WZNyGqrZAy/cn5fGPpFn0OYaxsq8vPWEmoRbmCyAgwFXjZZ6TrDO0vOeOD1On9OrldXXTF+O0AqZu9aat5mvHb3lG7DDR6GB5TaKU/eZWRgszUdVnCIgQt8fe/DhG1Fsp+QdiW/PRJAdB04t89/1O/w1cDnyilFU=\")\n",
+    "CHANNEL_SECRET = (\"06a8520ebc8b3efbcf84386f41800ca8\")\n",
+    "\n",
+    "line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)\n",
+    "handler = WebhookHandler(CHANNEL_SECRET)\n",
+    "\n",
+    "app = Flask(__name__)\n",
+    "\n",
+    "@app.route(\"/callback\", methods=['POST'])\n",
+    "def callback():\n",
+    "    signature = request.headers['X-Line-Signature']\n",
+    "    body = request.get_data(as_text=True)\n",
+    "\n",
+    "    try:\n",
+    "        handler.handle(body, signature)\n",
+    "    except InvalidSignatureError:\n",
+    "        abort(400)\n",
+    "\n",
+    "    return 'OK'\n",
+    "\n",
+    "@handler.add(MessageEvent, message=TextMessage)\n",
+    "def handle_message(event):\n",
+    "    user_message = event.message.text\n",
+    "\n",
+    "    if user_message == \"こんにちは\":\n",
+    "        reply = \"こんにちは！映画の記録ならlineboyにお任せ！\"\n",
+    "    else:\n",
+    "        reply = \"『映画登録 タイトル:〇〇』って送ってみてね！\"\n",
+    "\n",
+    "    line_bot_api.reply_message(\n",
+    "        event.reply_token,\n",
+    "        TextSendMessage(text=reply)\n",
+    "    )\n",
+    "\n",
+    "if __name__ == \"__main__\":\n",
+    "    app.run(port=5000)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "base",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.7"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
